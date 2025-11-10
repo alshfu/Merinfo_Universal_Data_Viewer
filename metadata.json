@@ -1,0 +1,5 @@
+{
+  "name": "Merinfo Universal Data Viewer",
+  "description": "A modern, responsive web application to upload, view, search, and filter company data from JSON/JSONL files with multi-language support.",
+  "requestFramePermissions": []
+}
