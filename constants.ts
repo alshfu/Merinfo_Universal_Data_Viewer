@@ -2,7 +2,7 @@
 export const translations = {
     ru: {
         main_title: "📊 Merinfo Data Viewer",
-        label_select_file: "1. Выберите файл или набор данных",
+        label_select_dataset: "1. Выберите набор данных",
         label_search: "2. Поиск",
         label_sort: "3. Сортировка",
         placeholder_search: "Название, номер, город...",
@@ -25,6 +25,7 @@ export const translations = {
         status_loaded: "Данные успешно загружены",
         status_error_format: "Ошибка: Не удалось распознать формат файла.",
         status_error_read: "Ошибка чтения файла",
+        status_error_fetch_list: "Ошибка: Не удалось загрузить список наборов данных.",
         no_data: "Нет данных для отображения",
         showing_first_500: "Показаны первые 500 записей. Используйте поиск или сортировку.",
         active: "Активна",
@@ -63,15 +64,24 @@ export const translations = {
         select_placeholder: "Выберите...",
         no_results_found: "Ничего не найдено",
         clear_filters: "Очистить",
-        dataset_placeholder: "Выберите набор данных...",
-        dataset_all: "Все компании",
-        dataset_assistants: "Ассистенты",
-        dataset_cars: "Автомобили",
-        dataset_construction: "Строительство"
+        f_skatt_filter: "F-skatt",
+        vat_filter: "VAT",
+        employer_filter: "Работодатель",
+        activity_description_label: "Описание деятельности",
+        interaction: "📌 Взаимодействие",
+        status: "Статус",
+        status_none: "Не выбрано",
+        status_interested: "Заинтересован",
+        status_not_interested: "Не заинтересован",
+        status_callback: "Перезвонить",
+        comment: "Комментарий",
+        add_comment_placeholder: "Добавьте комментарий...",
+        show_favorites_only: "Только избранные",
+        filter_by_status: "Фильтр по статусу"
     },
     sv: {
         main_title: "📊 Merinfo Data Viewer",
-        label_select_file: "1. Välj fil eller dataset",
+        label_select_dataset: "1. Välj dataset",
         label_search: "2. Sök",
         label_sort: "3. Sortering",
         placeholder_search: "Namn, organisationsnummer, stad...",
@@ -87,13 +97,14 @@ export const translations = {
         sort_assets_asc: "Tillgångar (stigande)",
         sort_date_desc: "Registreringsdatum (nya)",
         sort_date_asc: "Registreringsdatum (gamla)",
-        status_waiting: "Väntar på fil...",
+        status_waiting: "Väntar på val av dataset...",
         records: "Poster",
         status_analyzing: "Analyserar data...",
-        status_reading: "Läser fil...",
+        status_reading: "Läser data från GitHub...",
         status_loaded: "Data har laddats framgångsrikt",
         status_error_format: "Fel: Kunde inte tolka filformatet.",
-        status_error_read: "Fel vid filläsning",
+        status_error_read: "Fel vid läsning av data.",
+        status_error_fetch_list: "Fel: Kunde inte ladda listan med dataset.",
         no_data: "Ingen data att visa",
         showing_first_500: "Visar de första 500 posterna. Använd sök eller sortering.",
         active: "Aktivt",
@@ -132,11 +143,20 @@ export const translations = {
         select_placeholder: "Välj...",
         no_results_found: "Inga resultat",
         clear_filters: "Rensa",
-        dataset_placeholder: "Välj ett dataset...",
-        dataset_all: "Alla bolag",
-        dataset_assistants: "Assistentbolag",
-        dataset_cars: "Bilbranschen",
-        dataset_construction: "Byggbranschen"
+        f_skatt_filter: "F-skatt",
+        vat_filter: "Moms (VAT)",
+        employer_filter: "Arbetsgivare",
+        activity_description_label: "Verksamhetsbeskrivning",
+        interaction: "📌 Interaktion",
+        status: "Status",
+        status_none: "Ingen",
+        status_interested: "Intresserad",
+        status_not_interested: "Ej intresserad",
+        status_callback: "Återkomma",
+        comment: "Kommentar",
+        add_comment_placeholder: "Lägg till en kommentar...",
+        show_favorites_only: "Visa endast favoriter",
+        filter_by_status: "Filtrera efter status"
     }
 };
 
@@ -155,9 +175,13 @@ export const sortOptions = [
     { value: 'date-asc', key: 'sort_date_asc' },
 ];
 
-export const defaultDatasets = [
-    { value: 'merinfo_complete.jsonl', key: 'dataset_all' },
-    { value: 'merinfo_complete_assistants.jsonl', key: 'dataset_assistants' },
-    { value: 'merinfo_complete_bil.jsonl', key: 'dataset_cars' },
-    { value: 'merinfo_complete_bygg.jsonl', key: 'dataset_construction' },
+export const GITHUB_DATA_FILES = [
+    'merinfo_complete_bil.jsonl',
 ];
+
+const REPO_BASE_URL = 'https://cdn.jsdelivr.net/gh/alshfu/merinfo_scraper@main/data/';
+
+export const githubDatasets = GITHUB_DATA_FILES.map(fileName => ({
+    name: fileName,
+    download_url: `${REPO_BASE_URL}${fileName}`
+}));

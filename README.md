@@ -1,3 +1,4 @@
+
 # 
 ![Merinfo Data Viewer Screenshot](https://i.imgur.com/example.png) 
 *Note: Replace with an actual screenshot of the application.*
@@ -6,13 +7,13 @@
 
 ## About The Project
 
-This project is an interactive data visualization tool designed to make complex company information easily accessible. Users can upload their own datasets in JSON or JSONL format, or choose from pre-loaded datasets, to instantly browse, search, and apply advanced filters. The interface is clean, responsive, and includes both a detailed card view and a compact list view for tailored data exploration.
+This project is an interactive data visualization tool designed to make complex company information easily accessible. Users can select from a pre-loaded list of datasets (hosted on GitHub) to instantly browse, search, and apply advanced filters. The interface is clean, responsive, and includes both a detailed card view and a compact list view for tailored data exploration.
 
 Built with performance and user experience in mind, this tool empowers users to quickly analyze and find insights within large sets of company records without any backend setup.
 
 ### Key Features
 
-*   **Dynamic Data Loading**: Upload local `.json` or `.jsonl` files, or select from pre-configured default datasets.
+*   **Pre-loaded Datasets**: Select from a curated list of datasets from the `alshfu/merinfo_scraper` GitHub repository.
 *   **Powerful Search**: Instantly find companies by name, organization number, or city.
 *   **Advanced Filtering**:
     *   Filter by financial metrics (Revenue, Profit, Assets) using min/max ranges.
@@ -41,7 +42,7 @@ This is a pure frontend application with no build step required.
 
 ## Usage
 
-1.  **Load Data**: Use the file input to select a local `.json` or `.jsonl` file, or choose a predefined dataset from the dropdown menu.
+1.  **Load Data**: Use the dropdown menu to select a dataset from the list. The data will be loaded automatically from GitHub.
 2.  **Search**: Use the search bar to filter results based on company name, organization number, or city.
 3.  **Sort**: Select a sorting option from the dropdown to organize the data.
 4.  **Filter**: Click on "Advanced filters" to reveal more specific filtering options for financials, contact details, and industry classifications.

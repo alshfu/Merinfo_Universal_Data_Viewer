@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { CompanyData, Filters } from './types';
+import { CompanyData, Filters, UserInteraction } from './types';
 import Header from './components/Header';
 import Controls from './components/Controls';
 import CardGrid from './components/CardGrid';
 import { useI18n } from './hooks/useI18n';
+import { githubDatasets } from './constants';
 
 export type ViewMode = 'grid' | 'list';
 
@@ -19,17 +20,36 @@ const App: React.FC = () => {
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
         return (localStorage.getItem('merinfo_view_mode') as ViewMode) || 'grid';
     });
+    const [userInteractions, setUserInteractions] = useState<Record<string, UserInteraction>>({});
+    const [datasets] = useState(githubDatasets);
     const [selectedDataset, setSelectedDataset] = useState<string>('');
+
 
     const { t } = useI18n();
     
     useEffect(() => {
         setStatusMsg(t('status_waiting'));
+        try {
+            const savedInteractions = localStorage.getItem('merinfo_interactions');
+            if (savedInteractions) {
+                setUserInteractions(JSON.parse(savedInteractions));
+            }
+        } catch (error) {
+            console.error("Failed to load user interactions from localStorage", error);
+        }
     }, [t]);
     
     useEffect(() => {
         localStorage.setItem('merinfo_view_mode', viewMode);
     }, [viewMode]);
+    
+    useEffect(() => {
+        try {
+            localStorage.setItem('merinfo_interactions', JSON.stringify(userInteractions));
+        } catch (error) {
+            console.error("Failed to save user interactions to localStorage", error);
+        }
+    }, [userInteractions]);
 
     const initialFilters: Filters = {
         revenue: {},
@@ -40,6 +60,11 @@ const App: React.FC = () => {
         boardPhone: 'any',
         sni: [],
         categories: [],
+        status: [],
+        f_skatt: 'any',
+        vat_registered: 'any',
+        employer_registered: 'any',
+        showFavoritesOnly: false,
     };
 
     const [filters, setFilters] = useState<Filters>(initialFilters);
@@ -96,45 +121,33 @@ const App: React.FC = () => {
         setAllData([]);
         setFilters(initialFilters);
         setSearchTerm('');
+        setSniOptions([]);
+        setCategoryOptions([]);
     };
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-
-        resetForNewFile();
-        setSelectedDataset('');
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = e.target?.result as string;
-            loadDataFromString(text);
-        };
-        reader.onerror = () => {
-            setStatusMsg(t('status_error_read'));
-            setIsLoading(false);
-        };
-        reader.readAsText(file);
-    };
-
-    const handleDefaultFileSelect = async (fileName: string) => {
-        if (!fileName) {
-            setSelectedDataset('');
+    
+    const handleDatasetSelect = async (url: string) => {
+        setSelectedDataset(url);
+        if (!url) {
+            setAllData([]);
+            setFilters(initialFilters);
+            setSearchTerm('');
+            setStatusMsg(t('status_waiting'));
+            setSniOptions([]);
+            setCategoryOptions([]);
             return;
         }
-        
-        resetForNewFile();
-        setSelectedDataset(fileName);
-        const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-        if (fileInput) fileInput.value = '';
 
+        resetForNewFile();
+        
         try {
-            const response = await fetch(fileName);
-            if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const text = await response.text();
             loadDataFromString(text);
-        } catch (error) {
-            console.error('Error fetching default file:', error);
+        } catch (e) {
+            console.error("Failed to load dataset:", e);
             setStatusMsg(t('status_error_read'));
             setIsLoading(false);
         }
@@ -170,6 +183,16 @@ const App: React.FC = () => {
             if (filters.boardPhone === 'yes' && !hasBoardPhone) return false;
             if (filters.boardPhone === 'no' && hasBoardPhone) return false;
 
+            const taxInfo = item.tax_info;
+            if (filters.f_skatt === 'yes' && !taxInfo?.f_skatt) return false;
+            if (filters.f_skatt === 'no' && taxInfo?.f_skatt) return false;
+
+            if (filters.vat_registered === 'yes' && !taxInfo?.vat_registered) return false;
+            if (filters.vat_registered === 'no' && taxInfo?.vat_registered) return false;
+
+            if (filters.employer_registered === 'yes' && !taxInfo?.employer_registered) return false;
+            if (filters.employer_registered === 'no' && taxInfo?.employer_registered) return false;
+
             if (filters.sni.length > 0) {
                 const itemSni = item.industry?.sni_description?.split('\n').map(d => d.trim()) || [];
                 if (!itemSni.some(desc => filters.sni.includes(desc))) return false;
@@ -179,6 +202,21 @@ const App: React.FC = () => {
                 const itemCats = item.industry?.categories || [];
                 if (!itemCats.some(cat => filters.categories.includes(cat))) return false;
             }
+            
+            if (filters.status.length > 0) {
+                const interaction = userInteractions[item.company.org_number];
+                const currentStatus = interaction?.status ?? 'none';
+                if (!filters.status.includes(currentStatus)) {
+                    return false;
+                }
+            }
+            
+            if (filters.showFavoritesOnly) {
+                if (!userInteractions[item.company.org_number]?.isFavorite) {
+                    return false;
+                }
+            }
+
             return true;
         });
 
@@ -210,10 +248,20 @@ const App: React.FC = () => {
                 return 0;
         });
 
-    }, [allData, searchTerm, sortMethod, filters]);
+    }, [allData, searchTerm, sortMethod, filters, userInteractions]);
     
     const handleResetFilters = useCallback(() => {
       setFilters(initialFilters);
+    }, []);
+
+    const handleInteractionChange = useCallback((orgNumber: string, updates: Partial<UserInteraction>) => {
+        setUserInteractions(prev => ({
+            ...prev,
+            [orgNumber]: {
+                ...(prev[orgNumber] || { status: 'none', comment: '', isFavorite: false }),
+                ...updates,
+            }
+        }));
     }, []);
 
     return (
@@ -221,7 +269,9 @@ const App: React.FC = () => {
             <Header />
             <main className="container mx-auto px-4 py-8">
                 <Controls
-                    onFileChange={handleFileChange}
+                    datasets={datasets}
+                    selectedDataset={selectedDataset}
+                    onDatasetSelect={handleDatasetSelect}
                     searchTerm={searchTerm}
                     onSearchChange={setSearchTerm}
                     sortMethod={sortMethod}
@@ -236,10 +286,14 @@ const App: React.FC = () => {
                     isDisabled={allData.length === 0 && !isLoading}
                     viewMode={viewMode}
                     onViewModeChange={setViewMode}
-                    selectedDataset={selectedDataset}
-                    onDefaultFileSelect={handleDefaultFileSelect}
                 />
-                <CardGrid data={displayedData} isLoading={isLoading} viewMode={viewMode} />
+                <CardGrid 
+                    data={displayedData} 
+                    isLoading={isLoading} 
+                    viewMode={viewMode}
+                    userInteractions={userInteractions}
+                    onInteractionChange={handleInteractionChange}
+                />
             </main>
         </div>
     );

@@ -58,6 +58,14 @@ export interface CompanyData {
     board: BoardMember[];
 }
 
+export type InteractionStatus = 'none' | 'interested' | 'not_interested' | 'callback';
+
+export interface UserInteraction {
+    status: InteractionStatus;
+    comment: string;
+    isFavorite: boolean;
+}
+
 export interface Filters {
     revenue: { min?: number; max?: number };
     profit_after_financial_items: { min?: number; max?: number };
@@ -67,4 +75,9 @@ export interface Filters {
     boardPhone: 'any' | 'yes' | 'no';
     sni: string[];
     categories: string[];
+    status: InteractionStatus[];
+    f_skatt: 'any' | 'yes' | 'no';
+    vat_registered: 'any' | 'yes' | 'no';
+    employer_registered: 'any' | 'yes' | 'no';
+    showFavoritesOnly: boolean;
 }

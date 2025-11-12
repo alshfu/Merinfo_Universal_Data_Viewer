@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { CompanyData } from '../types';
+import { CompanyData, UserInteraction } from '../types';
 import Card from './Card';
 import ListItem from './ListItem';
 import { useI18n } from '../hooks/useI18n';
@@ -9,6 +10,8 @@ interface CardGridProps {
     data: CompanyData[];
     isLoading: boolean;
     viewMode: ViewMode;
+    userInteractions: Record<string, UserInteraction>;
+    onInteractionChange: (orgNumber: string, updates: Partial<UserInteraction>) => void;
 }
 
 const LoadingSpinner: React.FC = () => (
@@ -24,7 +27,7 @@ const EmptyState: React.FC = () => (
     </div>
 );
 
-const CardGrid: React.FC<CardGridProps> = ({ data, isLoading, viewMode }) => {
+const CardGrid: React.FC<CardGridProps> = ({ data, isLoading, viewMode, userInteractions, onInteractionChange }) => {
     const { t } = useI18n();
     if (isLoading) return <LoadingSpinner />;
     if (data.length === 0) return <EmptyState />;
@@ -36,7 +39,12 @@ const CardGrid: React.FC<CardGridProps> = ({ data, isLoading, viewMode }) => {
             return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                     {itemsToRender.map((item, index) => (
-                        <Card key={item.company.org_number || index} item={item} />
+                        <Card 
+                            key={item.company.org_number || index} 
+                            item={item} 
+                            interaction={userInteractions[item.company.org_number]}
+                            onInteractionChange={(updates) => onInteractionChange(item.company.org_number, updates)}
+                        />
                     ))}
                 </div>
             );
@@ -46,7 +54,12 @@ const CardGrid: React.FC<CardGridProps> = ({ data, isLoading, viewMode }) => {
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden">
                 <div>
                     {itemsToRender.map((item, index) => (
-                        <ListItem key={item.company.org_number || index} item={item} />
+                        <ListItem 
+                            key={item.company.org_number || index} 
+                            item={item}
+                            interaction={userInteractions[item.company.org_number]}
+                            onInteractionChange={(updates) => onInteractionChange(item.company.org_number, updates)}
+                        />
                     ))}
                 </div>
             </div>
